@@ -224,7 +224,7 @@ function submitVal(name, val) {
 }
 )=====";
 
-#define WIFI_SSID "WHUT-WLAN"
+#define WIFI_SSID "5akura1"
 #define WIFI_PASSWORD "zhaoyonghao0429"
 
 //#define STATIC_IP                       // uncomment for static IP, set IP below
