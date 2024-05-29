@@ -18,18 +18,167 @@ const int LED = 2;                         //设置LED引脚
  
 DNSServer dnsServer;                       //创建dnsServer实例
 WebServer server(webPort);                 //开启web服务, 创建TCP SERVER,参数: 端口号,最大连接数
- 
-#define ROOT_HTML  "<!DOCTYPE html><html><head><title>WIFI</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><style type=\"text/css\">.input{display: block; margin-top: 10px;}.input span{width: 100px; float: left; float: left; height: 36px; line-height: 36px;}.input input{height: 30px;width: 200px;}.btn{width: 120px; height: 35px; background-color: #000000; border:0px; color:#ffffff; margin-top:15px; margin-left:100px;}</style><body><form method=\"POST\" action=\"configwifi\"><label class=\"input\"><span>WiFi SSID</span><input type=\"text\" name=\"ssid\" value=\"\"></label><label class=\"input\"><span>WiFi PASS</span> <input type=\"text\"  name=\"pass\"></label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"Submie\"> <p><span> Nearby wifi:</P></form>"
- 
+
+char ROOT_HTML[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-WS2812s WiFi Setup</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            width: 100%;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="pass"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WiFi Setup</h1>
+        <form action="configwifi" method="POST">
+            <label for="ssid">SSID</label>
+            <input type="text" name="ssid" required>
+            <label for="password">Password</label>
+            <input type="pass" name="pass" required>
+            <input type="submit" value="Connect">
+            <p><label>Nearby wifi:</label></P>
+        </form>
+)=====";
+
+char ROOTOK_HTML[] PROGMEM = R"=====(
+<meta charset='UTF-8'>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .message-box {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+<div class="message-box">
+    <p>SSID: <strong>
+)=====";
+
+char ROOTERRORSSID_HTML[] PROGMEM = R"=====(
+<meta charset='UTF-8'>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .message-box {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+<div class="message-box">
+    <p><strong>错误：</strong>未找到WIFI SSID。</p>
+</div>
+)=====";
+
+char ROOTERRORPWD_HTML[] PROGMEM = R"=====(
+<meta charset='UTF-8'>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .message-box {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+<div class="message-box">
+    <p><strong>错误：</strong>未找到PASSWARD。</p>
+</div>
+)=====";
+
 /*
  * 处理网站根目录的访问请求
  */
 void handleRoot() 
 {
   if (server.hasArg("selectSSID")) {
-    server.send(200, "text/html", ROOT_HTML + scanNetworksID + "</body></html>");   //scanNetWprksID是扫描到的wifi
+    server.send(200, "text/html", ROOT_HTML + scanNetworksID + "</div></body></html>");   //scanNetWprksID是扫描到的wifi  + scanNetworksID "
   } else {
-    server.send(200, "text/html", ROOT_HTML + scanNetworksID + "</body></html>");   
+    server.send(200, "text/html", ROOT_HTML + scanNetworksID + "</div></body></html>");   // + scanNetworksID + "</body></html>"
   }
 }
  
@@ -48,7 +197,7 @@ void handleConfigWifi()               //返回http状态
   else                                //没有参数
   { 
     Serial.println("error, not found ssid");
-    server.send(200, "text/html", "<meta charset='UTF-8'>error, not found ssid"); //返回错误页面
+    server.send(200, "text/html", ROOTERRORSSID_HTML); //返回错误页面
     return;
   }
   //密码与账号同理
@@ -61,10 +210,10 @@ void handleConfigWifi()               //返回http状态
   else 
   {
     Serial.println("error, not found password");
-    server.send(200, "text/html", "<meta charset='UTF-8'>error, not found password");
+    server.send(200, "text/html", ROOTERRORPWD_HTML);
     return;
   }
-  server.send(200, "text/html", "<meta charset='UTF-8'>SSID：" + wifi_ssid + "<br />password:" + wifi_pass + "<br />已取得WiFi信息,正在尝试连接,请手动关闭此页面。"); //返回保存成功页面
+  server.send(200, "text/html", ROOTOK_HTML + wifi_ssid + "</strong></p><p>Password: <strong>" + wifi_pass + "</strong></p><p>已取得WiFi信息，正在尝试连接，请手动关闭此页面。</p></div>"); //返回保存成功页面
   delay(2000);
   WiFi.softAPdisconnect(true);     //参数设置为true，设备将直接关闭接入点模式，即关闭设备所建立的WiFi网络。
   server.close();                  //关闭web服务
