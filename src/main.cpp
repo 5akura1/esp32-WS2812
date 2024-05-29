@@ -125,8 +125,8 @@ void srv_handle_set() {
 void setup() {
   Serial.begin(115200);                //波特率
 
-  LEDinit();  
-                           //LED用于显示WiFi状态
+  LEDinit();  //LED用于显示WiFi状态
+  
   Serial.println("Wifi setup");
   connectToWiFi(connectTimeOut_s);     //连接wifi，传入的是wifi连接等待时间15s
 
